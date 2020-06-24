@@ -41,13 +41,14 @@ potential_finds = {}
 for fetch in look_for_hashes(conn, 
                              hash_frequencies(extract_values_from_tree(hash_tree))):
     for item in fetch:
+        item = item[0]
         if item in potential_finds:
             potential_finds[item] += 1
         else:
             potential_finds[item] = 1
 
-three = sorted(potential_finds)[-3:]
+three = sorted(potential_finds, key=potential_finds.get, reverse=True)[:3]
 for i in three:
-    name, _id = search_for_song_id(conn, i[0])
-    print(f"{name} {_id}")
+    name, _id = search_for_song_id(conn, i)
+    print(f"Hits: {potential_finds[_id]}\tName: {name}")
     

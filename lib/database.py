@@ -49,9 +49,9 @@ def search_for_song_hash(conn: sqlite3.Connection, hash_: str) -> tuple:
     cursor.execute("""SELECT name, id FROM songs WHERE song_hash=(?)""", [hash_])
     return cursor.fetchone()
 
-def look_for_hashes(conn: sqlite3.Connection, fingerprints, amount_to_fetch: int = 750) -> list:
+def look_for_hashes(conn: sqlite3.Connection, fingerprints, amount_to_fetch: int = 998) -> list:
     __ = f"""SELECT id_of_song FROM fingerprints
-             WHERE fingerprint IN ({749 * "?,"}?)"""
+             WHERE fingerprint IN ({(amount_to_fetch-1) * "?,"}?)"""
     cursor = conn.cursor()
     for fingerprint in split_and_generate(fingerprints, 0, amount_to_fetch, False):
         if len(fingerprint) == amount_to_fetch:
