@@ -1,5 +1,5 @@
 from types import GeneratorType as Generator
-from typing import Union
+from typing import Union, List
 import sqlite3
 import numpy as np
 
@@ -67,3 +67,14 @@ def search_for_song_id(conn: sqlite3.Connection, id_: int) -> tuple:
     cursor = conn.cursor()
     cursor.execute("""SELECT name, id FROM songs WHERE id=(?)""", [id_])
     return cursor.fetchone()
+
+def get_settings(conn: sqlite3.Connection) -> List[tuple]:
+    cursor = conn.cursor()
+    cursor.execute("""SELECT name, type, value FROM settings""")
+    return cursor.fetchmany(100)
+
+def insert_settings(conn: sqlite3.Connection, settings: List[tuple]):
+    cursor = conn.cursor()
+    cursor.executemany("""INSERT INTO settings(name, type, value)
+                          VALUES(?,?,?)""", settings)
+    conn.commit()

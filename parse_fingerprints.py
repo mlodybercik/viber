@@ -2,6 +2,8 @@ from lib.audiohandle import divide, detect_peaks, generate_point_mesh, return_po
 from lib.database import insert_into_fingerprints, search_for_song_hash, insert_into_songs
 from lib.hashtree import generate_tree, merge_trees, extract_values_from_tree
 from lib.filehandle import walk_paths, open_audio, hash_file
+from lib.constants import check_for_settings, DEFAULTS
+from pydub.exceptions import CouldntDecodeError
 from lib.fingerprint import hash_frequencies
 from pathlib import Path
 import matplotlib.mlab as mlab
@@ -11,16 +13,25 @@ import sqlite3
 
 conn = sqlite3.connect("fingerprint_database.db")
 
+if not check_for_settings(conn, DEFAULTS):
+    print("Database was created on other settings, next runs may not yield the same effects!")
+
+
 for file in walk_paths():
     file_hash = hash_file(file)
     file_ext = file.name.split(".")[-1]
-    if search_for_song_hash(conn, file_hash) == ():
+    if search_for_song_hash(conn, file_hash) is not None:
         print(f"File {file} already in database")
         logging.info("File %s already in database.", file)
         continue
 
     print(f"Parsing {file}")
-    channel_count, Bps, sample_rate, audio_arr = open_audio(file)
+    try:
+        channel_count, Bps, sample_rate, audio_arr = open_audio(file)
+    except CouldntDecodeError as e:
+        print(f"Error while parsing {file}")
+        print(e)
+        exit(-1)
     audio_arr = create_buffer(audio_arr)
     # mp3 seem kinda bugged, so we are skipping first and last two seconds of data
     if file_ext == "mp3":

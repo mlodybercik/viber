@@ -1,7 +1,6 @@
+from lib.database import insert_settings
+from lib.constants import pack_settings
 import sqlite3
-from typing import Union
-from types import GeneratorType as Generator
-import numpy as np
 import logging
 
 conn = sqlite3.connect("fingerprint_database.db")
@@ -21,12 +20,19 @@ if input("? [y/N] ").upper() != "Y":
 
 base.execute("""DROP TABLE IF EXISTS songs""")
 base.execute("""DROP TABLE IF EXISTS fingerprints""")
+base.execute("""DROP TABLE IF EXISTS settings""")
 
 base.execute("""CREATE TABLE songs 
                 (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, song_hash TEXT)""")
 
 base.execute("""CREATE TABLE fingerprints
                 (id_of_song INT, fingerprint INT)""")
+
+base.execute("""CREATE TABLE settings
+                (name TEXT, type TEXT, value BLOB)""")
+
+insert_settings(conn, pack_settings())
+
 conn.commit()
 
 logging.info("Succesfully created new database")
