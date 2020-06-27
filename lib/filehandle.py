@@ -15,8 +15,6 @@ def open_audio(filename):
     """Opens file with pydub and returns its raw data and info"""
     ext = filename.name.split(".")[-1]
     audio_file = AudioSegment.from_file(str(filename), ext)
-    # TODO, temporary fix.
-    audio_file = audio_file.strip_silence()
     channel_count = audio_file.channels
     bytes_per_sample = audio_file.sample_width
     sample_rate = audio_file.frame_rate

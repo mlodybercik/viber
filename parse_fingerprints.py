@@ -1,4 +1,4 @@
-from lib.audiohandle import divide, detect_peaks, generate_point_mesh, return_position, create_buffer
+from lib.audiohandle import divide, detect_peaks, generate_point_mesh, return_position, create_buffer, find_clips
 from lib.database import insert_into_fingerprints, search_for_song_hash, insert_into_songs
 from lib.hashtree import generate_tree, merge_trees, extract_values_from_tree
 from lib.filehandle import walk_paths, open_audio, hash_file
@@ -33,10 +33,8 @@ for file in walk_paths():
         print(e)
         exit(-1)
     audio_arr = create_buffer(audio_arr)
-    # mp3 seem kinda bugged, so we are skipping first and last two seconds of data
-    if file_ext == "mp3":
-        audio_arr = audio_arr[2*sample_rate:-2*sample_rate]
-    audio = divide(audio_arr, desired_length=1, sample_rate=sample_rate, overlap=0.5)
+    start, end = find_clips(audio_arr)
+    audio = divide(audio_arr[start:end], desired_length=1, sample_rate=sample_rate, overlap=0.5)
     hash_tree = {}
     for fragment in audio:
         # create spectrum and multiply it by 10*log10

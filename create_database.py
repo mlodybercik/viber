@@ -21,12 +21,13 @@ if input("? [y/N] ").upper() != "Y":
 base.execute("""DROP TABLE IF EXISTS songs""")
 base.execute("""DROP TABLE IF EXISTS fingerprints""")
 base.execute("""DROP TABLE IF EXISTS settings""")
+base.execute("""DROP TABLE IF EXISTS current_recognition""")
 
 base.execute("""CREATE TABLE songs 
                 (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, song_hash TEXT)""")
 
 base.execute("""CREATE TABLE fingerprints
-                (id_of_song INT, fingerprint INT)""")
+                (id_of_song INT, fingerprint INT KEY)""")
 
 base.execute("""CREATE TABLE settings
                 (name TEXT, type TEXT, value BLOB)""")

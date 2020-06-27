@@ -87,3 +87,12 @@ def generate_point_mesh(position_list,
             assert point2[1]-point1[1] >= 0
             #          freq1,     freq2,          delta_time
             yield (point1[0], point2[0], point2[1]-point1[1])
+
+def find_clips(arr):
+    for start, i in enumerate(arr):
+        if i > 10:
+            break
+    for end, i in enumerate(arr[::-1]):
+        if i > 10:
+            break
+    return (start, len(arr)-end)

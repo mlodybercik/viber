@@ -41,27 +41,13 @@ def insert_into_fingerprints(conn: sqlite3.Connection, id_: int, fingerprints) -
     cursor = conn.cursor()
     for fingerprint in split_and_generate(fingerprints, id_):
         cursor.executemany("""INSERT INTO fingerprints(id_of_song, fingerprint)
-                            VALUES (?, ?)""", fingerprint)
+                              VALUES (?, ?)""", fingerprint)
     conn.commit()
 
 def search_for_song_hash(conn: sqlite3.Connection, hash_: str) -> tuple:
     cursor = conn.cursor()
     cursor.execute("""SELECT name, id FROM songs WHERE song_hash=(?)""", [hash_])
     return cursor.fetchone()
-
-def look_for_hashes(conn: sqlite3.Connection, fingerprints, amount_to_fetch: int = 998) -> list:
-    __ = f"""SELECT id_of_song FROM fingerprints
-             WHERE fingerprint IN ({(amount_to_fetch-1) * "?,"}?)"""
-    cursor = conn.cursor()
-    for fingerprint in split_and_generate(fingerprints, 0, amount_to_fetch, False):
-        if len(fingerprint) == amount_to_fetch:
-            cursor.execute(__, tuple(fingerprint))
-        else:
-            cursor.execute(f"""SELECT id_of_song 
-                               FROM fingerprints
-                               WHERE fingerprint IN ({(len(fingerprint)-1) * "?,"}?)""",
-                               tuple(fingerprint))
-        yield cursor.fetchmany(amount_to_fetch)
 
 def search_for_song_id(conn: sqlite3.Connection, id_: int) -> tuple:
     cursor = conn.cursor()
@@ -73,8 +59,31 @@ def get_settings(conn: sqlite3.Connection) -> List[tuple]:
     cursor.execute("""SELECT name, type, value FROM settings""")
     return cursor.fetchmany(100)
 
-def insert_settings(conn: sqlite3.Connection, settings: List[tuple]):
+def insert_settings(conn: sqlite3.Connection, settings: List[tuple]) -> None:
     cursor = conn.cursor()
     cursor.executemany("""INSERT INTO settings(name, type, value)
                           VALUES(?,?,?)""", settings)
+    conn.commit()
+
+def insert_into_temp(conn: sqlite3.Connection, id_: int, fingerprints) -> None:
+    cursor = conn.cursor()
+    for fingerprint in split_and_generate(fingerprints, id_, to_id=True, add_id=lambda b, c: tuple([b])):
+        cursor.executemany("""INSERT INTO current_recognition(fingerprint)
+                            VALUES (?)""", tuple(fingerprint))
+    conn.commit()
+
+def look_for_hashes(conn: sqlite3.Connection, amount_to_fetch: int = 998) -> List[tuple]:
+    cursor = conn.cursor()
+    cursor.execute(f"""SELECT id_of_song
+                       FROM fingerprints
+                       WHERE fingerprint IN (
+                           SELECT fingerprint FROM current_recognition)""")
+    
+    while fetch := cursor.fetchmany(amount_to_fetch):
+        yield fetch
+
+def create_temp(conn: sqlite3.Connection):
+    cursor = conn.cursor()
+    cursor.execute("""CREATE TEMP TABLE current_recognition
+                      (fingerprint INT STORAGE MEMORY KEY)""")
     conn.commit()
