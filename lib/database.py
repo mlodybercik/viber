@@ -82,8 +82,18 @@ def look_for_hashes(conn: sqlite3.Connection, amount_to_fetch: int = 998) -> Lis
     while fetch := cursor.fetchmany(amount_to_fetch):
         yield fetch
 
-def create_temp(conn: sqlite3.Connection):
+def create_temp(conn: sqlite3.Connection) -> None:
     cursor = conn.cursor()
-    cursor.execute("""CREATE TEMP TABLE current_recognition
+    cursor.execute("""CREATE TEMP TABLE IF NOT EXISTS current_recognition
                       (fingerprint INT STORAGE MEMORY KEY)""")
     conn.commit()
+
+def clear_temp(conn: sqlite3.Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute("""DELETE FROM current_recognition WHERE 1""")
+    conn.commit()
+
+def count_in_database(conn: sqlite3.Connection, database: str) -> int:
+    cursor = conn.cursor()
+    cursor.execute(f"""SELECT COUNT(*) FROM ({database})""")
+    return cursor.fetchone()[0]
